@@ -1,0 +1,5 @@
+name: Image Extra Field
+description: Adds an extra field to image widgets
+package: Custom
+type: module
+core: 8.x
