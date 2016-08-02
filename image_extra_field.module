@@ -1,1 +1,49 @@
 <?php
+
+/**
+ * @file
+ * Code for image_extra_field module.
+ */
+
+use \Drupal\Core\Form\FormStateInterface;
+use \Drupal\field\Entity\FieldConfig;
+
+/**
+ * Implements hook_form_FORM_ID_alter() for field_config_edit_form().
+ *
+ * {@inheritdoc}
+ */
+function image_extra_field_form_field_config_edit_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  $field = $form_state->getFormObject()->getEntity();
+
+  if ($field->getType() == 'image') {
+    $form['extra_field_enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => t('Enable %field field', ['%field' => 'extra']),
+      '#description' => t('The extra field may be used to store extra information like a caption or byline.'),
+      '#weight' => 50,
+      '#default_value' => $field->getThirdPartySetting('image_extra_field', 'extra_field_enabled'),
+    ];
+
+    $form['#entity_builders'][] = 'image_extra_field_image_field_form_builder';
+  }
+}
+
+/**
+ * Entity builder for image fields.
+ *
+ * @param string $entity_type
+ * @param \Drupal\field\Entity\FieldConfig $field
+ * @param array $form
+ * @param \Drupal\Core\Form\FormStateInterface $form_state
+ *
+ * @see image_extra_field_form_field_config_edit_form_alter()
+ */
+function image_extra_field_image_field_form_builder($entity_type, FieldConfig $field, array &$form, FormStateInterface $form_state) {
+  if ($form_state->getValue('extra_field_enabled')) {
+    $field->setThirdPartySetting('image_extra_field', 'extra_field_enabled', $form_state->getValue('extra_field_enabled'));
+    return;
+  }
+
+  $field->unsetThirdPartySetting('image_extra_field', 'extra_field_enabled');
+}
