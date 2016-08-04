@@ -47,3 +47,47 @@ function image_extra_field_image_field_form_builder($entity_type, FieldConfig $f
 
   $field->unsetThirdPartySetting('image_extra_field', 'extra_field_enabled');
 }
+
+function image_extra_field_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
+  $widget = $context['widget'];
+
+  if ($widget->getPluginId() == 'image_image') {
+    $entity = $form_state->getFormObject()->getEntity();
+    $field = $entity->getFieldDefinition($element['#field_name']);
+    $extra_field_enabled = isset($field->getThirdPartySettings('image_extra_field')['extra_field_enabled']) ? TRUE : FALSE;
+    $default_value = $element['#default_value'];
+
+    $element['image_extra_field'] = array(
+      '#title' => t('Extra field'),
+      '#type' => 'textfield',
+      '#default_value' => '', //$entity->getThirdPartySetting('image_extra_field', 'image_extra_field'),
+      '#description' => t('Enter extra information like a caption or byline. '),
+      '#maxlength' => 512,
+      '#access' => (bool) $default_value['fids'] && $extra_field_enabled,
+    );
+
+    $element['#entity_builders'][] = 'image_extra_field_image_widget_form_builder';
+  }
+}
+
+function image_extra_field_image_widget_form_builder($entity_type, \Drupal\Core\Entity $field, array &$form, FormStateInterface $form_state) {
+//  print('test');
+//  if ($form_state->getValue('image_extra_field')) {
+//    $field->setThirdPartySetting('image_extra_field', 'image_extra_field', $form_state->getValue('image_extra_field'));
+//    return;
+//  }
+//
+//  $field->unsetThirdPartySetting('image_extra_field', 'image_extra_field');
+}
+
+function image_extra_field_entity_presave(Drupal\Core\Entity\EntityInterface $entity) {
+  if ($entity instanceof ContentEntityInterface && $entity->isTranslatable()) {
+    $route_match = \Drupal::routeMatch();
+    \Drupal::service('content_translation.synchronizer')->synchronizeFields($entity, $entity->language()->getId(), $route_match->getParameter('source_langcode'));
+  }
+}
+
+function image_extra_field_form_alter($form, $form_state, $form_id) {
+//  print($form_id);
+//  print($form_state->getBuildInfo()['base_form_id']);
+}
